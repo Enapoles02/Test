@@ -1,0 +1,12 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+streamlit = "*"
+cryptography = "==3.4.8"
+requests = "*"
+pandas = "*"
+numpy = "*"
+
+[dev-packages]
