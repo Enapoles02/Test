@@ -8,6 +8,12 @@ from cryptography.fernet import Fernet
 # --- Configuración inicial ---
 st.set_page_config(page_title="Daily Huddle", layout="centered")
 
+# --- Detectar si está en Streamlit Cloud o en Local ---
+if "STREAMLIT_SERVER_HOST" in os.environ:
+    BASE_URL = "https://your-app-name.streamlit.app"
+else:
+    BASE_URL = "http://localhost:8501"
+
 # --- Manejo de claves AES ---
 KEY_FILE = "key.key"
 if not os.path.exists(KEY_FILE):
@@ -57,6 +63,9 @@ def get_current_role(username):
     role_index = hash(username + str(start_of_week)) % len(roles)
     return roles[role_index]
 
+def generate_user_url(username):
+    return f"{BASE_URL}/?user={quote(username.strip())}"
+
 # --- Bases de datos ---
 user_db = load_or_create_user_db()
 attendance_db = load_or_create_attendance_db()
@@ -82,7 +91,7 @@ def register_user():
             else:
                 role = "Team Lead" if team_lead_password == MASTER_TEAM_LEAD_PASSWORD else "User"
                 encrypted_password = encrypt_password(password)
-                personalized_url = f"http://localhost:8501/?user={quote(username.strip())}"
+                personalized_url = generate_user_url(username)
                 new_user = {"Name": name, "Username": username.strip(), "Password": encrypted_password, "URL": personalized_url, "Role": role}
                 user_db.loc[len(user_db)] = new_user
                 user_db.to_csv("users.csv", index=False)
@@ -130,9 +139,6 @@ def admin_dashboard(username):
 st.sidebar.title("Navigation")
 query_params = st.query_params
 username = query_params.get("user", None)
-
-
-
 
 if username:
     username = username.strip().lower()
