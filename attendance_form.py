@@ -8,11 +8,23 @@ from cryptography.fernet import Fernet
 # --- Configuración inicial ---
 st.set_page_config(page_title="Daily Huddle", layout="centered")
 
-# --- Detectar si está en Streamlit Cloud o en Local ---
-if "STREAMLIT_SERVER_HOST" in os.environ:
-    BASE_URL = "https://your-app-name.streamlit.app"
-else:
-    BASE_URL = "http://localhost:8501"
+# --- Función para detectar si estamos en Streamlit Cloud o Local ---
+def get_base_url():
+    """ Detecta automáticamente la URL base (local o en Streamlit Cloud). """
+    try:
+        host = st.request.host
+        if "localhost" in host:
+            return "http://localhost:8501"
+        else:
+            return f"https://{host}"
+    except:
+        return "http://localhost:8501"  # En caso de error, usa localhost
+
+# --- Función para generar la URL del usuario ---
+def generate_user_url(username):
+    """ Genera la URL personalizada para cada usuario. """
+    base_url = get_base_url()
+    return f"{base_url}/?user={quote(username.strip())}"
 
 # --- Manejo de claves AES ---
 KEY_FILE = "key.key"
@@ -62,9 +74,6 @@ def get_current_role(username):
     start_of_week = datetime.now() - timedelta(days=datetime.now().weekday())
     role_index = hash(username + str(start_of_week)) % len(roles)
     return roles[role_index]
-
-def generate_user_url(username):
-    return f"{BASE_URL}/?user={quote(username.strip())}"
 
 # --- Bases de datos ---
 user_db = load_or_create_user_db()
