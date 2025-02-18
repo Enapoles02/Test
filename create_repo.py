@@ -14,7 +14,7 @@ AUTH_URL = f"https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_I
 
 # Solicitar autorización al usuario
 print(f"🔹 Por favor, autoriza la aplicación en GitHub: {AUTH_URL}")
-AUTH_CODE = input("🔹 Ingresa el código de autorización que te da GitHub: ")
+AUTH_CODE = input("c369ff281a958a5c1266")
 
 # Intercambiar el código de autorización por un token de acceso
 TOKEN_URL = "https://github.com/login/oauth/access_token"
