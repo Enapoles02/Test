@@ -11,8 +11,8 @@ from cryptography.fernet import Fernet
 st.set_page_config(page_title="Daily Huddle", layout="centered")
 
 # --- CREDENCIALES DE GITHUB ---
-GITHUB_USERNAME = "tu_usuario"  # 🔹 Cambia esto por tu usuario de GitHub
-GITHUB_TOKEN = "tu_token"  # 🔹 Agrega tu token de GitHub aquí
+GITHUB_USERNAME = "Enapoles02"  # 🔹 Cambia esto por tu usuario de GitHub
+GITHUB_TOKEN = "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"  # 🔹 Agrega tu token de GitHub aquí
 GITHUB_API_URL = "https://api.github.com"
 
 # --- FORZAR HTTPS EN STREAMLIT CLOUD ---
