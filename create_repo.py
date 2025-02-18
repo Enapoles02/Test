@@ -3,7 +3,7 @@ import os
 
 # --- CONFIGURACIÓN ---
 CLIENT_ID = "Ov23liUUql4eiDC2Z3lE"  # 🔹 Tu Client ID
-CLIENT_SECRET = "8e7365c5d154e1a1ae4460994268e57a9beaacbcx"  # 🔹 Tu Client Secret
+CLIENT_SECRET = "2350b0a724183df5ac84529fa56e21e994698557"  # 🔹 Tu Client Secret
 AUTH_CODE = "41fb8144dce7c784c7e3"  # 🔹 Código de autorización obtenido
 GITHUB_API_URL = "https://api.github.com"
 
