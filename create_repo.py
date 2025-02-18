@@ -1,54 +1,48 @@
-import os
 import requests
+import os
 
-# Cargar credenciales desde GitHub Secrets
-GITHUB_CLIENT_ID = os.getenv("MY_GITHUB_APP_CLIENT_ID")
-GITHUB_CLIENT_SECRET = os.getenv("MY_GITHUB_APP_CLIENT_SECRET")
+# --- CONFIGURACIÓN ---
+CLIENT_ID = "Ov23liUUql4eiDC2Z3lE"  # 🔹 Tu Client ID
+CLIENT_SECRET = "8e7365c5d154e1a1ae4460994268e57a9beaacbcx"  # 🔹 Tu Client Secret
+AUTH_CODE = "41fb8144dce7c784c7e3"  # 🔹 Código de autorización obtenido
+GITHUB_API_URL = "https://api.github.com"
 
-# Verificar que los Secrets están bien cargados
-if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
-    raise ValueError("❌ ERROR: No se encontró el GITHUB_CLIENT_ID o GITHUB_CLIENT_SECRET en GitHub Secrets.")
+# --- INTERCAMBIO DE CÓDIGO POR TOKEN ---
+token_url = "https://github.com/login/oauth/access_token"
+token_data = {
+    "client_id": CLIENT_ID,
+    "client_secret": CLIENT_SECRET,
+    "code": AUTH_CODE
+}
+headers = {"Accept": "application/json"}
 
-# URL para autenticación OAuth
-AUTH_URL = f"https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&scope=repo"
+response = requests.post(token_url, data=token_data, headers=headers)
+response_data = response.json()
 
-# Solicitar autorización al usuario
-print(f"🔹 Por favor, autoriza la aplicación en GitHub: {AUTH_URL}")
-AUTH_CODE = input("c369ff281a958a5c1266")
+if "access_token" not in response_data:
+    print("❌ Error obteniendo el token de acceso:", response_data)
+    exit(1)
 
-# Intercambiar el código de autorización por un token de acceso
-TOKEN_URL = "https://github.com/login/oauth/access_token"
-token_response = requests.post(
-    TOKEN_URL,
-    headers={"Accept": "application/json"},
-    data={
-        "client_id": GITHUB_CLIENT_ID,
-        "client_secret": GITHUB_CLIENT_SECRET,
-        "code": AUTH_CODE,
-    },
-)
+ACCESS_TOKEN = response_data["access_token"]
+print("✅ Token de acceso obtenido con éxito.")
 
-token_data = token_response.json()
-ACCESS_TOKEN = token_data.get("access_token")
+# --- CREAR REPOSITORIO ---
+repo_name = "Test-Repo"  # 🔹 Cambia el nombre si lo deseas
+repo_data = {
+    "name": repo_name,
+    "private": False,
+    "description": "Repositorio creado automáticamente con OAuth"
+}
+headers = {
+    "Authorization": f"token {ACCESS_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
+}
 
-if not ACCESS_TOKEN:
-    print(f"❌ No se pudo obtener un token de acceso: {token_data}")
-    exit()
-
-print(f"✅ Token obtenido con éxito: {ACCESS_TOKEN[:5]}***")
-
-# Solicitar al usuario el nombre del nuevo repositorio
-REPO_NAME = input("🔹 Ingresa el nombre del nuevo repositorio: ")
-
-# Crear el repositorio en la cuenta del usuario
-REPO_URL = "https://api.github.com/user/repos"
-repo_response = requests.post(
-    REPO_URL,
-    headers={"Authorization": f"token {ACCESS_TOKEN}", "Accept": "application/vnd.github.v3+json"},
-    json={"name": REPO_NAME, "private": True},
-)
+repo_url = f"{GITHUB_API_URL}/user/repos"
+repo_response = requests.post(repo_url, json=repo_data, headers=headers)
 
 if repo_response.status_code == 201:
-    print(f"✅ Repositorio creado con éxito: https://github.com/{REPO_NAME}")
+    print(f"✅ Repositorio '{repo_name}' creado exitosamente.")
+    print("🔗 URL:", repo_response.json()["html_url"])
 else:
-    print(f"❌ Error al crear el repositorio: {repo_response.json()}")
+    print("❌ Error creando el repositorio:", repo_response.json())
