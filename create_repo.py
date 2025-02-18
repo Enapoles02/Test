@@ -1,58 +1,79 @@
-import requests
 import os
+import requests
 
+# 🔹 Cargar credenciales desde GitHub Secrets
+GITHUB_CLIENT_ID = os.getenv("MY_GITHUB_APP_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.getenv("MY_GITHUB_APP_CLIENT_SECRET")
+GITHUB_USERNAME = "Enapoles02"  # 🔹 Reemplázalo con tu usuario de GitHub
+
+# 🔹 Depuración: Verifica si las variables están bien cargadas
 print(f"GITHUB_CLIENT_ID: {GITHUB_CLIENT_ID}")
 print(f"GITHUB_CLIENT_SECRET: {'SET' if GITHUB_CLIENT_SECRET else 'NOT SET'}")
 
-# Carga los valores desde GitHub Secrets
-GITHUB_CLIENT_ID = os.getenv("MY_GITHUB_APP_CLIENT_ID")
-GITHUB_CLIENT_SECRET = os.getenv("MY_GITHUB_APP_CLIENT_SECRET")
+if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
+    raise ValueError("❌ ERROR: No se encontró el GITHUB_CLIENT_ID o GITHUB_CLIENT_SECRET en GitHub Secrets.")
 
-# URL para autenticación OAuth
-AUTH_URL = "https://github.com/login/oauth/access_token"
-API_URL = "https://api.github.com"
+# 🔹 URL para obtener el token de acceso usando la GitHub App
+GITHUB_OAUTH_URL = "https://github.com/login/oauth/access_token"
+GITHUB_API_URL = "https://api.github.com"
 
-def get_access_token():
-    """ Obtiene un token de acceso desde la GitHub App """
-    data = {
-        "client_id": GITHUB_CLIENT_ID,
-        "client_secret": GITHUB_CLIENT_SECRET,
-        "grant_type": "client_credentials"
-    }
-    headers = {"Accept": "application/json"}
-    
-    response = requests.post(AUTH_URL, data=data, headers=headers)
-    
+# 🔹 Solicitar el token de acceso con la GitHub App
+def get_github_access_token():
+    print("🔄 Solicitando token de acceso desde GitHub...")
+    response = requests.post(
+        GITHUB_OAUTH_URL,
+        headers={"Accept": "application/json"},
+        data={
+            "client_id": GITHUB_CLIENT_ID,
+            "client_secret": GITHUB_CLIENT_SECRET,
+            "grant_type": "client_credentials",
+        },
+    )
+
     if response.status_code == 200:
-        return response.json().get("access_token")
+        access_token = response.json().get("access_token")
+        if access_token:
+            print("✅ Token obtenido correctamente.")
+            return access_token
+        else:
+            print(f"❌ Error en respuesta: {response.json()}")
+            raise ValueError("❌ No se encontró access_token en la respuesta.")
     else:
-        print(f"Error obteniendo token: {response.text}")
-        return None
+        print(f"❌ Error obteniendo token: {response.json()}")
+        raise ValueError("❌ No se pudo obtener un token de acceso.")
 
-def create_repository(repo_name):
-    """ Crea un repositorio en GitHub usando la GitHub App """
-    access_token = get_access_token()
-    if not access_token:
-        print("❌ No se pudo obtener un token de acceso.")
-        return
-    
-    url = f"{API_URL}/user/repos"
-    headers = {"Authorization": f"token {access_token}", "Accept": "application/vnd.github.v3+json"}
-    
-    data = {
-        "name": repo_name,
-        "private": True,
-        "description": "Repositorio generado automáticamente desde GitHub App"
+# 🔹 Token de acceso
+GITHUB_ACCESS_TOKEN = get_github_access_token()
+
+# 🔹 Nombre del nuevo repositorio (puedes personalizar esto)
+NEW_REPO_NAME = "DailyHuddleRepo"
+
+# 🔹 Crear un nuevo repositorio en GitHub
+def create_github_repo():
+    print(f"🛠️ Creando repositorio: {NEW_REPO_NAME} en GitHub...")
+
+    repo_data = {
+        "name": NEW_REPO_NAME,
+        "description": "Repositorio generado automáticamente para Daily Huddle",
+        "private": True,  # 🔹 True para repos privado, False para público
+        "auto_init": True,  # 🔹 Inicializa con un README.md
     }
-    
-    response = requests.post(url, json=data, headers=headers)
-    
-    if response.status_code == 201:
-        print(f"✅ Repositorio '{repo_name}' creado exitosamente.")
-    else:
-        print(f"❌ Error creando repositorio: {response.text}")
 
-# Prueba la creación del repositorio
+    headers = {
+        "Authorization": f"token {GITHUB_ACCESS_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    response = requests.post(f"{GITHUB_API_URL}/user/repos", json=repo_data, headers=headers)
+
+    if response.status_code == 201:
+        repo_url = response.json().get("html_url")
+        print(f"✅ Repositorio creado exitosamente: {repo_url}")
+        return repo_url
+    else:
+        print(f"❌ Error al crear el repositorio: {response.json()}")
+        raise ValueError("❌ No se pudo crear el repositorio en GitHub.")
+
+# 🔹 Ejecutar la creación del repositorio
 if __name__ == "__main__":
-    repo_name = "DailyHuddleRepo"
-    create_repository(repo_name)
+    create_github_repo()
