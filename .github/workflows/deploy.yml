@@ -1,3 +1,8 @@
+name: Crear Repositorio en GitHub Automáticamente
+
+on:
+  workflow_dispatch:  # Permite ejecutarlo manualmente desde GitHub Actions
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
