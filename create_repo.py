@@ -1,6 +1,9 @@
 import requests
 import os
 
+print(f"GITHUB_CLIENT_ID: {GITHUB_CLIENT_ID}")
+print(f"GITHUB_CLIENT_SECRET: {'SET' if GITHUB_CLIENT_SECRET else 'NOT SET'}")
+
 # Carga los valores desde GitHub Secrets
 GITHUB_CLIENT_ID = os.getenv("MY_GITHUB_APP_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("MY_GITHUB_APP_CLIENT_SECRET")
