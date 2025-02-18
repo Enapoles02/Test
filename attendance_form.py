@@ -8,23 +8,13 @@ from cryptography.fernet import Fernet
 # --- Configuración inicial ---
 st.set_page_config(page_title="Daily Huddle", layout="centered")
 
-# --- Función para detectar si estamos en Streamlit Cloud o Local ---
-def get_base_url():
-    """ Detecta automáticamente la URL base (local o en Streamlit Cloud). """
-    try:
-        host = st.request.host
-        if "localhost" in host:
-            return "http://localhost:8501"
-        else:
-            return f"https://{host}"
-    except:
-        return "http://localhost:8501"  # En caso de error, usa localhost
+# --- FORZAR HTTPS EN STREAMLIT CLOUD ---
+STREAMLIT_APP_URL = st.secrets.get("STREAMLIT_APP_URL", "https://your-app-name.streamlit.app")  # 🔹 Configurable desde Streamlit Cloud
 
 # --- Función para generar la URL del usuario ---
 def generate_user_url(username):
-    """ Genera la URL personalizada para cada usuario. """
-    base_url = get_base_url()
-    return f"{base_url}/?user={quote(username.strip())}"
+    """ Genera la URL personalizada SIEMPRE usando HTTPS en Streamlit Cloud. """
+    return f"{STREAMLIT_APP_URL}/?user={quote(username.strip())}"
 
 # --- Manejo de claves AES ---
 KEY_FILE = "key.key"
@@ -51,7 +41,7 @@ def decrypt_password(encrypted_password):
     return cipher.decrypt(encrypted_password.encode()).decode()
 
 def authenticate_user(username, password, user_db):
-    user_record = user_db[user_db["Username"].str.strip().str.lower() == username.strip().lower()]
+    user_record = user_db[user_db["Username"].astype(str).str.strip().str.lower() == username.strip().lower()]
     if user_record.empty:
         return False
     stored_password = user_record["Password"].values[0]
@@ -59,13 +49,17 @@ def authenticate_user(username, password, user_db):
 
 def load_or_create_user_db():
     try:
-        return pd.read_csv("users.csv")
+        df = pd.read_csv("users.csv", dtype=str)  # 🔹 Asegurar que todo se carga como texto
+        df.fillna("", inplace=True)  # 🔹 Reemplazar valores nulos con texto vacío
+        return df
     except FileNotFoundError:
         return pd.DataFrame(columns=["Name", "Username", "Password", "URL", "Role"])
 
 def load_or_create_attendance_db():
     try:
-        return pd.read_csv("attendance.csv")
+        df = pd.read_csv("attendance.csv", dtype=str)
+        df.fillna("", inplace=True)
+        return df
     except FileNotFoundError:
         return pd.DataFrame(columns=["Username", "Date", "Time", "Mood"])
 
@@ -93,7 +87,7 @@ def register_user():
         if submit:
             if password != confirm_password:
                 st.error("Passwords do not match!")
-            elif username.strip().lower() in user_db["Username"].str.strip().str.lower().values:
+            elif username.strip().lower() in user_db["Username"].astype(str).str.strip().str.lower().values:
                 st.error("Username already exists!")
             elif team_lead_password and team_lead_password != MASTER_TEAM_LEAD_PASSWORD:
                 st.error("Invalid Team Lead Password!")
@@ -128,7 +122,7 @@ def daily_check_in(username):
 
 # --- Tablero general ---
 def admin_dashboard(username):
-    role = user_db[user_db["Username"].str.strip().str.lower() == username.strip().lower()]["Role"].values[0]
+    role = user_db[user_db["Username"].astype(str).str.strip().str.lower() == username.strip().lower()]["Role"].values[0]
     if role != "Action Taker" and role != "Team Lead":
         st.error("You do not have permission to access this page.")
         return
@@ -151,7 +145,7 @@ username = query_params.get("user", None)
 
 if username:
     username = username.strip().lower()
-    registered_users = user_db["Username"].str.strip().str.lower().tolist()
+    registered_users = user_db["Username"].astype(str).str.strip().str.lower().tolist()
 
     if username in registered_users:
         daily_check_in(username)
@@ -170,7 +164,7 @@ else:
 
             if submit:
                 if authenticate_user(username, password, user_db):
-                    user_record = user_db[user_db["Username"].str.strip().str.lower() == username.strip().lower()]
+                    user_record = user_db[user_db["Username"].astype(str).str.strip().str.lower() == username.strip().lower()]
                     if not user_record.empty:
                         personalized_url = user_record["URL"].values[0]
                         st.success("Login successful! Redirecting...")
