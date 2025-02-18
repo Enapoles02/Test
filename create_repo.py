@@ -1,17 +1,22 @@
 import os
 import requests
 
-# Obtener credenciales desde GitHub Secrets
+# Cargar credenciales desde GitHub Secrets
 GITHUB_CLIENT_ID = os.getenv("MY_GITHUB_APP_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("MY_GITHUB_APP_CLIENT_SECRET")
 
-# URL para solicitar autenticación OAuth
+# Verificar que los Secrets están bien cargados
+if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
+    raise ValueError("❌ ERROR: No se encontró el GITHUB_CLIENT_ID o GITHUB_CLIENT_SECRET en GitHub Secrets.")
+
+# URL para autenticación OAuth
 AUTH_URL = f"https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&scope=repo"
 
+# Solicitar autorización al usuario
 print(f"🔹 Por favor, autoriza la aplicación en GitHub: {AUTH_URL}")
-AUTH_CODE = input("🔹 Ingresa el código de autorización: ")
+AUTH_CODE = input("🔹 Ingresa el código de autorización que te da GitHub: ")
 
-# Intercambiar el código de autorización por un access token
+# Intercambiar el código de autorización por un token de acceso
 TOKEN_URL = "https://github.com/login/oauth/access_token"
 token_response = requests.post(
     TOKEN_URL,
