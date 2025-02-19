@@ -1,0 +1,31 @@
+name: Generate User App
+
+on:
+  workflow_dispatch:  # Permite ejecutarlo manualmente desde Actions
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Instalar dependencias
+        run: pip install pandas streamlit
+
+      - name: Ejecutar el script de generación
+        run: python "python generate_user_app.py"
+
+      - name: Commit de los archivos generados
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "🔄 Generando mini-apps de usuarios automáticamente"
+          git push
